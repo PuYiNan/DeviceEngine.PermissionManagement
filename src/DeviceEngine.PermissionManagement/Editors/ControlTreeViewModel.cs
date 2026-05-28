@@ -43,14 +43,16 @@ namespace DeviceEngine.PermissionManagement.Editors
             get => _isChecked;
             set
             {
+                if (_isChecked == value) return;
+
                 _isChecked = value;
                 OnPropertyChanged(nameof(IsChecked));
-                
+
                 foreach (var child in Children)
                 {
                     child.IsChecked = value;
                 }
-                
+
                 if (Parent != null)
                 {
                     Parent.UpdateCheckedState();
@@ -61,17 +63,21 @@ namespace DeviceEngine.PermissionManagement.Editors
         private void UpdateCheckedState()
         {
             if (Children.Count == 0) return;
-            
+
             bool allChecked = Children.All(c => c.IsChecked);
             bool noneChecked = Children.All(c => !c.IsChecked);
-            
-            if (allChecked)
+
+            if (allChecked && !_isChecked)
             {
-                IsChecked = true;
+                _isChecked = true;
+                OnPropertyChanged(nameof(IsChecked));
+                if (Parent != null) Parent.UpdateCheckedState();
             }
-            else if (noneChecked)
+            else if (noneChecked && _isChecked)
             {
-                IsChecked = false;
+                _isChecked = false;
+                OnPropertyChanged(nameof(IsChecked));
+                if (Parent != null) Parent.UpdateCheckedState();
             }
         }
 
