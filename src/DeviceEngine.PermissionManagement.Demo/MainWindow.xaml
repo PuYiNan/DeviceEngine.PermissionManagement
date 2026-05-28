@@ -1,0 +1,55 @@
+<Window x:Class="DeviceEngine.PermissionManagement.Demo.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:pm="clr-namespace:DeviceEngine.PermissionManagement.Behaviors;assembly=DeviceEngine.PermissionManagement"
+        Title="权限管理控件 Demo" Height="450" Width="600">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="10">
+            <Label Content="当前角色：" Margin="5" />
+            <ComboBox x:Name="cmbRole" Width="150" Margin="5" SelectionChanged="cmbRole_SelectionChanged">
+                <ComboBoxItem Content="Admin" />
+                <ComboBoxItem Content="Operator" />
+                <ComboBoxItem Content="ReadOnly" />
+            </ComboBox>
+        </StackPanel>
+
+        <StackPanel Grid.Row="1" Margin="10" Orientation="Vertical">
+            <GroupBox Header="基础操作" Margin="5">
+                <StackPanel Orientation="Vertical" Margin="5">
+                    <Button x:Name="btnSave" Content="保存" Margin="3" Padding="10,5" />
+                    <Button x:Name="btnDelete" Content="删除" Margin="3" Padding="10,5" />
+                    <Button x:Name="btnExport" Content="导出" Margin="3" Padding="10,5" />
+                    <Button x:Name="btnAdvanced" Content="高级设置" Margin="3" Padding="10,5" />
+                </StackPanel>
+            </GroupBox>
+
+            <GroupBox x:Name="gbAdminPanel" Header="管理员功能" Margin="5">
+                <StackPanel Orientation="Vertical" Margin="5">
+                    <Button x:Name="btnManageUsers" Content="管理用户" Margin="3" Padding="10,5" />
+                    <Button x:Name="btnManageRoles" Content="管理角色" Margin="3" Padding="10,5" />
+                    <Button x:Name="btnSystemLogs" Content="系统日志" Margin="3" Padding="10,5" />
+                </StackPanel>
+            </GroupBox>
+
+            <GroupBox x:Name="gbReadOnlyPanel" Header="只读面板" Margin="5">
+                <StackPanel Orientation="Vertical" Margin="5">
+                    <TextBox x:Name="txtReadOnly" Text="只读文本框示例" IsReadOnly="True" Margin="3" />
+                    <Label x:Name="lblReadOnly" Content="只读标签示例" Margin="3" />
+                </StackPanel>
+            </GroupBox>
+        </StackPanel>
+
+        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="10">
+            <Button x:Name="btnAddDynamic" Content="添加动态按钮" Margin="5" Padding="10,5" Click="btnAddDynamic_Click" />
+            <Button x:Name="btnConfig" Content="配置权限" Margin="5" Padding="10,5" Click="btnConfig_Click" />
+        </StackPanel>
+
+        <StackPanel x:Name="pnlDynamicControls" Grid.Row="1" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="10" />
+    </Grid>
+</Window>

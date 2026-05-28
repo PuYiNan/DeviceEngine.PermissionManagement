@@ -1,0 +1,46 @@
+{
+  "ScanMode": "Hybrid",
+  "CurrentRole": "Operator",
+  "Roles": [
+    {
+      "Name": "Admin",
+      "Permissions": [
+        {
+          "Name": "FullAccess",
+          "DisabledControls": [],
+          "HiddenControls": []
+        }
+      ]
+    },
+    {
+      "Name": "Operator",
+      "Permissions": [
+        {
+          "Name": "BasicAccess",
+          "DisabledControls": [
+            "btnDelete",
+            "btnAdvanced"
+          ],
+          "HiddenControls": []
+        }
+      ]
+    },
+    {
+      "Name": "ReadOnly",
+      "Permissions": [
+        {
+          "Name": "ReadOnlyAccess",
+          "DisabledControls": [
+            "btnSave",
+            "btnDelete",
+            "btnExport",
+            "btnAddDynamic"
+          ],
+          "HiddenControls": [
+            "gbAdminPanel"
+          ]
+        }
+      ]
+    }
+  ]
+}
