@@ -1,4 +1,5 @@
 using DeviceEngine.PermissionManagement.Models;
+using System;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Linq;
@@ -23,14 +24,14 @@ namespace DeviceEngine.PermissionManagement.Editors
         }
 
         public event PropertyChangedEventHandler PropertyChanged;
-        public event System.EventHandler<Permission> PermissionSelected;
+        public event EventHandler<Permission> PermissionSelected;
 
-        public void LoadPermissions(Role role)
+        public void LoadPermissions(PermissionConfig config)
         {
             Permissions.Clear();
-            if (role != null)
+            if (config?.Permissions != null)
             {
-                foreach (var permission in role.Permissions)
+                foreach (var permission in config.Permissions)
                 {
                     Permissions.Add(permission);
                 }
@@ -41,23 +42,29 @@ namespace DeviceEngine.PermissionManagement.Editors
             }
         }
 
-        public void AddPermission(Role role, string name)
+        public void AddPermission(PermissionConfig config, string name)
         {
-            if (role != null && !string.IsNullOrEmpty(name) && !role.Permissions.Any(p => p.Name == name))
+            if (config != null && !string.IsNullOrEmpty(name) && !config.Permissions.Any(p => p.Name == name))
             {
                 var permission = new Permission { Name = name };
-                role.Permissions.Add(permission);
+                config.Permissions.Add(permission);
                 Permissions.Add(permission);
                 SelectedPermission = permission;
             }
         }
 
-        public void RemovePermission(Role role, Permission permission)
+        public void RemovePermission(PermissionConfig config, Permission permission)
         {
-            if (role != null && role.Permissions.Count > 1)
+            if (config != null && permission != null && config.Permissions.Count > 1)
             {
-                role.Permissions.Remove(permission);
+                config.Permissions.Remove(permission);
                 Permissions.Remove(permission);
+
+                foreach (var role in config.Roles)
+                {
+                    role.PermissionNames.Remove(permission.Name);
+                }
+
                 if (SelectedPermission == permission)
                 {
                     SelectedPermission = Permissions.Count > 0 ? Permissions[0] : null;
@@ -70,7 +77,6 @@ namespace DeviceEngine.PermissionManagement.Editors
             if (permission != null && !string.IsNullOrEmpty(controlPath) && !permission.DisabledControls.Contains(controlPath))
             {
                 permission.DisabledControls.Add(controlPath);
-                OnPropertyChanged(nameof(Permissions));
             }
         }
 
@@ -79,7 +85,6 @@ namespace DeviceEngine.PermissionManagement.Editors
             if (permission != null)
             {
                 permission.DisabledControls.Remove(controlPath);
-                OnPropertyChanged(nameof(Permissions));
             }
         }
 
@@ -88,7 +93,6 @@ namespace DeviceEngine.PermissionManagement.Editors
             if (permission != null && !string.IsNullOrEmpty(controlPath) && !permission.HiddenControls.Contains(controlPath))
             {
                 permission.HiddenControls.Add(controlPath);
-                OnPropertyChanged(nameof(Permissions));
             }
         }
 
@@ -97,7 +101,6 @@ namespace DeviceEngine.PermissionManagement.Editors
             if (permission != null)
             {
                 permission.HiddenControls.Remove(controlPath);
-                OnPropertyChanged(nameof(Permissions));
             }
         }
 

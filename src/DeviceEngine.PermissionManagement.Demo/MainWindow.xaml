@@ -12,11 +12,7 @@
 
         <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="10">
             <Label Content="当前角色：" Margin="5" />
-            <ComboBox x:Name="cmbRole" Width="150" Margin="5" SelectionChanged="cmbRole_SelectionChanged">
-                <ComboBoxItem Content="Admin" />
-                <ComboBoxItem Content="Operator" />
-                <ComboBoxItem Content="ReadOnly" />
-            </ComboBox>
+            <ComboBox x:Name="cmbRole" Width="150" Margin="5" SelectionChanged="cmbRole_SelectionChanged" />
         </StackPanel>
 
         <StackPanel Grid.Row="1" Margin="10" Orientation="Vertical">

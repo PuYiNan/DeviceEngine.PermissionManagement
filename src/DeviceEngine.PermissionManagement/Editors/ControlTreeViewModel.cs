@@ -98,8 +98,8 @@ namespace DeviceEngine.PermissionManagement.Editors
             RootItems.Clear();
             var rootItem = new ControlTreeItem
             {
-                Name = window.Name ?? "Window",
-                FullPath = window.Name ?? "Window",
+                Name = !string.IsNullOrEmpty(window.Name) ? window.Name : "Window",
+                FullPath = "",
                 Control = window
             };
             RootItems.Add(rootItem);
@@ -122,7 +122,7 @@ namespace DeviceEngine.PermissionManagement.Editors
                         var item = new ControlTreeItem
                         {
                             Name = name,
-                            FullPath = $"{parentItem.FullPath}.{name}",
+                            FullPath = string.IsNullOrEmpty(parentItem.FullPath) ? name : $"{parentItem.FullPath}.{name}",
                             Control = fe,
                             Parent = parentItem
                         };

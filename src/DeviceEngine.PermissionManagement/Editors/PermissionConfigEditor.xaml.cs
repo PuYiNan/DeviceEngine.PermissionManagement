@@ -2,7 +2,6 @@ using DeviceEngine.PermissionManagement.Managers;
 using DeviceEngine.PermissionManagement.Models;
 using Microsoft.Win32;
 using Newtonsoft.Json;
-using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
 using System.Linq;
@@ -13,15 +12,16 @@ namespace DeviceEngine.PermissionManagement.Editors
 {
     public partial class PermissionConfigEditor : Window, INotifyPropertyChanged
     {
+        private readonly IPermissionManager _permissionManager;
+
         public RoleListViewModel RoleList { get; } = new RoleListViewModel();
         public PermissionEditorViewModel PermissionEditor { get; } = new PermissionEditorViewModel();
         public ControlTreeViewModel ControlTree { get; } = new ControlTreeViewModel();
 
-        public List<string> SelectedDisabledControls => PermissionEditor.SelectedPermission?.DisabledControls ?? new List<string>();
-        public List<string> SelectedHiddenControls => PermissionEditor.SelectedPermission?.HiddenControls ?? new List<string>();
-
         public PermissionConfigEditor()
         {
+            _permissionManager = ServiceLocator.Current.GetService(typeof(IPermissionManager)) as IPermissionManager;
+
             InitializeComponent();
             DataContext = this;
 
@@ -34,10 +34,15 @@ namespace DeviceEngine.PermissionManagement.Editors
 
         private void LoadConfig()
         {
-            var config = PermissionManager.Instance.GetType().GetField("_config", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)?.GetValue(PermissionManager.Instance) as PermissionConfig;
+            var config = _permissionManager?.GetConfig();
             if (config != null)
             {
-                RoleList.LoadRoles(config.Roles);
+                RoleList.LoadRoles(config);
+                PermissionEditor.LoadPermissions(config);
+                if (RoleList.Roles.Count > 0)
+                {
+                    RoleList.SelectedRole = RoleList.Roles[0];
+                }
             }
         }
 
@@ -55,22 +60,26 @@ namespace DeviceEngine.PermissionManagement.Editors
 
         private void RoleList_RoleSelected(object sender, Role role)
         {
-            PermissionEditor.LoadPermissions(role);
-            RefreshControlSelection();
+            if (role != null)
+            {
+                var config = _permissionManager?.GetConfig();
+                RoleList.RefreshBindings(config);
+                PermissionEditor.LoadPermissions(config);
+                RefreshControlSelection();
+            }
         }
 
         private void PermissionEditor_PermissionSelected(object sender, Permission permission)
         {
             RefreshControlSelection();
-            OnPropertyChanged(nameof(SelectedDisabledControls));
-            OnPropertyChanged(nameof(SelectedHiddenControls));
         }
 
         private void RefreshControlSelection()
         {
             if (PermissionEditor.SelectedPermission != null)
             {
-                var allRestricted = PermissionEditor.SelectedPermission.DisabledControls.Concat(PermissionEditor.SelectedPermission.HiddenControls).ToList();
+                var allRestricted = PermissionEditor.SelectedPermission.DisabledControls
+                    .Concat(PermissionEditor.SelectedPermission.HiddenControls).ToList();
                 ControlTree.SetSelectedPaths(allRestricted);
             }
             else
@@ -81,38 +90,48 @@ namespace DeviceEngine.PermissionManagement.Editors
 
         private void btnAddRole_Click(object sender, RoutedEventArgs e)
         {
+            var config = _permissionManager?.GetConfig();
+            if (config == null) return;
+
             var input = new InputDialog("添加角色", "请输入角色名称:");
             if (input.ShowDialog() == true)
             {
-                RoleList.AddRole(input.InputText);
+                RoleList.AddRole(config, input.InputText);
+                RoleList.RefreshBindings(config);
             }
         }
 
         private void btnRemoveRole_Click(object sender, RoutedEventArgs e)
         {
-            if (RoleList.SelectedRole != null)
+            var config = _permissionManager?.GetConfig();
+            if (RoleList.SelectedRole != null && config != null)
             {
                 if (MessageBox.Show($"确定要删除角色 \"{RoleList.SelectedRole.Name}\" 吗?", "确认删除", MessageBoxButton.YesNo) == MessageBoxResult.Yes)
                 {
-                    RoleList.RemoveRole(RoleList.SelectedRole);
+                    RoleList.RemoveRole(config, RoleList.SelectedRole);
+                    RoleList.RefreshBindings(config);
                 }
             }
         }
 
         private void btnAddPermission_Click(object sender, RoutedEventArgs e)
         {
-            if (RoleList.SelectedRole != null)
+            var config = _permissionManager?.GetConfig();
+            if (config != null)
             {
-                PermissionEditor.AddPermission(RoleList.SelectedRole, txtPermissionName.Text);
+                PermissionEditor.AddPermission(config, txtPermissionName.Text);
                 txtPermissionName.Clear();
+                RoleList.RefreshBindings(config);
             }
         }
 
         private void btnRemovePermission_Click(object sender, RoutedEventArgs e)
         {
-            if (RoleList.SelectedRole != null && PermissionEditor.SelectedPermission != null)
+            var config = _permissionManager?.GetConfig();
+            if (config != null && PermissionEditor.SelectedPermission != null)
             {
-                PermissionEditor.RemovePermission(RoleList.SelectedRole, PermissionEditor.SelectedPermission);
+                PermissionEditor.RemovePermission(config, PermissionEditor.SelectedPermission);
+                RoleList.RefreshBindings(config);
             }
         }
 
@@ -125,7 +144,6 @@ namespace DeviceEngine.PermissionManagement.Editors
                 {
                     PermissionEditor.AddDisabledControl(PermissionEditor.SelectedPermission, path);
                 }
-                OnPropertyChanged(nameof(SelectedDisabledControls));
             }
         }
 
@@ -138,7 +156,6 @@ namespace DeviceEngine.PermissionManagement.Editors
                 {
                     PermissionEditor.AddHiddenControl(PermissionEditor.SelectedPermission, path);
                 }
-                OnPropertyChanged(nameof(SelectedHiddenControls));
             }
         }
 
@@ -150,25 +167,39 @@ namespace DeviceEngine.PermissionManagement.Editors
 
         private void SaveConfig()
         {
-            var configField = PermissionManager.Instance.GetType().GetField("_config", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
-            var config = configField?.GetValue(PermissionManager.Instance) as PermissionConfig;
+            var config = _permissionManager?.GetConfig();
             if (config != null)
             {
-                config.Roles = RoleList.Roles.ToList();
-                PermissionManager.Instance.GetType().GetMethod("SaveConfiguration", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)?.Invoke(PermissionManager.Instance, null);
+                _permissionManager.SaveConfig();
             }
         }
 
         private void btnImport_Click(object sender, RoutedEventArgs e)
         {
+            var config = _permissionManager?.GetConfig();
+            if (config == null) return;
+
             var dialog = new OpenFileDialog { Filter = "JSON Files|*.json" };
             if (dialog.ShowDialog() == true)
             {
                 try
                 {
                     string json = File.ReadAllText(dialog.FileName);
-                    var config = JsonConvert.DeserializeObject<PermissionConfig>(json);
-                    RoleList.LoadRoles(config.Roles);
+                    var imported = JsonConvert.DeserializeObject<PermissionConfig>(json);
+                    if (imported != null)
+                    {
+                        config.Roles = imported.Roles;
+                        config.Permissions = imported.Permissions;
+                        config.ScanMode = imported.ScanMode;
+
+                        RoleList.LoadRoles(config);
+                        PermissionEditor.LoadPermissions(config);
+                        if (RoleList.Roles.Count > 0)
+                        {
+                            RoleList.SelectedRole = RoleList.Roles[0];
+                        }
+                        RoleList.RefreshBindings(config);
+                    }
                     MessageBox.Show("配置导入成功!", "导入成功", MessageBoxButton.OK, MessageBoxImage.Information);
                 }
                 catch
@@ -180,12 +211,14 @@ namespace DeviceEngine.PermissionManagement.Editors
 
         private void btnExport_Click(object sender, RoutedEventArgs e)
         {
+            var config = _permissionManager?.GetConfig();
+            if (config == null) return;
+
             var dialog = new SaveFileDialog { Filter = "JSON Files|*.json", FileName = "permissions.json" };
             if (dialog.ShowDialog() == true)
             {
                 try
                 {
-                    var config = new PermissionConfig { Roles = RoleList.Roles.ToList() };
                     string json = JsonConvert.SerializeObject(config, Formatting.Indented);
                     File.WriteAllText(dialog.FileName, json);
                     MessageBox.Show("配置导出成功!", "导出成功", MessageBoxButton.OK, MessageBoxImage.Information);
@@ -205,7 +238,7 @@ namespace DeviceEngine.PermissionManagement.Editors
         private void btnOK_Click(object sender, RoutedEventArgs e)
         {
             SaveConfig();
-            PermissionManager.Instance.ReloadConfiguration();
+            _permissionManager?.ReloadConfiguration();
             DialogResult = true;
             Close();
         }
@@ -240,18 +273,18 @@ namespace DeviceEngine.PermissionManagement.Editors
             grid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
             grid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
 
-            var label = new Label { Content = prompt, Margin = new Thickness(5) };
+            var label = new System.Windows.Controls.Label { Content = prompt, Margin = new Thickness(5) };
             Grid.SetRow(label, 0);
 
-            var textBox = new TextBox { Margin = new Thickness(5) };
-            textBox.SetBinding(TextBox.TextProperty, new System.Windows.Data.Binding("InputText") { Mode = System.Windows.Data.BindingMode.TwoWay, Source = this });
+            var textBox = new System.Windows.Controls.TextBox { Margin = new Thickness(5) };
+            textBox.SetBinding(System.Windows.Controls.TextBox.TextProperty, new System.Windows.Data.Binding("InputText") { Mode = System.Windows.Data.BindingMode.TwoWay, Source = this });
             Grid.SetRow(textBox, 1);
 
-            var buttonPanel = new StackPanel { Orientation = Orientation.Horizontal, HorizontalAlignment = HorizontalAlignment.Right, Margin = new Thickness(5) };
-            var okBtn = new Button { Content = "确定", Width = 60, Margin = new Thickness(2) };
-            okBtn.Click += (s, e) => { DialogResult = true; Close(); };
-            var cancelBtn = new Button { Content = "取消", Width = 60, Margin = new Thickness(2) };
-            cancelBtn.Click += (s, e) => { DialogResult = false; Close(); };
+            var buttonPanel = new System.Windows.Controls.StackPanel { Orientation = System.Windows.Controls.Orientation.Horizontal, HorizontalAlignment = System.Windows.HorizontalAlignment.Right, Margin = new Thickness(5) };
+            var okBtn = new System.Windows.Controls.Button { Content = "确定", Width = 60, Margin = new Thickness(2) };
+            okBtn.Click += (s, ev) => { DialogResult = true; Close(); };
+            var cancelBtn = new System.Windows.Controls.Button { Content = "取消", Width = 60, Margin = new Thickness(2) };
+            cancelBtn.Click += (s, ev) => { DialogResult = false; Close(); };
             buttonPanel.Children.Add(okBtn);
             buttonPanel.Children.Add(cancelBtn);
             Grid.SetRow(buttonPanel, 2);

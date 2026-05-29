@@ -1,13 +1,13 @@
-using System.Collections.Generic;
+using System.Collections.ObjectModel;
 
 namespace DeviceEngine.PermissionManagement.Models
 {
     public class Permission
     {
         public string Name { get; set; }
-        
-        public List<string> DisabledControls { get; set; } = new List<string>();
-        
-        public List<string> HiddenControls { get; set; } = new List<string>();
+
+        public ObservableCollection<string> DisabledControls { get; set; } = new ObservableCollection<string>();
+
+        public ObservableCollection<string> HiddenControls { get; set; } = new ObservableCollection<string>();
     }
 }

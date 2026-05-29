@@ -1,45 +1,107 @@
 {
-  "ScanMode": "Hybrid",
+  "ScanMode": 2,
   "CurrentRole": "Operator",
+  "Permissions": [
+    {
+      "Name": "FullAccess",
+      "DisabledControls": [],
+      "HiddenControls": []
+    },
+    {
+      "Name": "BasicAccess",
+      "DisabledControls": [
+        "btnDelete",
+        "btnAdvanced"
+      ],
+      "HiddenControls": []
+    },
+    {
+      "Name": "ReadOnlyAccess",
+      "DisabledControls": [
+        "btnSave",
+        "btnDelete",
+        "btnExport",
+        "btnAddDynamic"
+      ],
+      "HiddenControls": [
+        "gbAdminPanel"
+      ]
+    },
+    {
+      "Name": "123",
+      "DisabledControls": [
+        "cmbRole",
+        "cmbRole.templateRoot",
+        "cmbRole.templateRoot.PART_Popup",
+        "cmbRole.templateRoot.toggleButton",
+        "cmbRole.templateRoot.toggleButton.templateRoot",
+        "cmbRole.templateRoot.toggleButton.templateRoot.splitBorder",
+        "cmbRole.templateRoot.toggleButton.templateRoot.splitBorder.Arrow",
+        "cmbRole.templateRoot.contentPresenter",
+        "Header",
+        "btnSave",
+        "btnSave.border",
+        "btnSave.border.contentPresenter",
+        "btnDelete",
+        "btnDelete.border",
+        "btnDelete.border.contentPresenter",
+        "btnExport",
+        "btnExport.border",
+        "btnExport.border.contentPresenter",
+        "btnAdvanced",
+        "btnAdvanced.border",
+        "btnAdvanced.border.contentPresenter",
+        "gbAdminPanel",
+        "gbAdminPanel.Header",
+        "gbAdminPanel.btnManageUsers",
+        "gbAdminPanel.btnManageUsers.border",
+        "gbAdminPanel.btnManageUsers.border.contentPresenter",
+        "gbAdminPanel.btnManageRoles",
+        "gbAdminPanel.btnManageRoles.border",
+        "gbAdminPanel.btnManageRoles.border.contentPresenter",
+        "gbAdminPanel.btnSystemLogs",
+        "gbAdminPanel.btnSystemLogs.border",
+        "gbAdminPanel.btnSystemLogs.border.contentPresenter",
+        "gbReadOnlyPanel",
+        "gbReadOnlyPanel.Header",
+        "gbReadOnlyPanel.txtReadOnly",
+        "gbReadOnlyPanel.txtReadOnly.border",
+        "gbReadOnlyPanel.txtReadOnly.border.PART_ContentHost",
+        "gbReadOnlyPanel.lblReadOnly",
+        "btnAddDynamic",
+        "btnAddDynamic.border",
+        "btnAddDynamic.border.contentPresenter",
+        "btnConfig",
+        "btnConfig.border",
+        "btnConfig.border.contentPresenter",
+        "pnlDynamicControls"
+      ],
+      "HiddenControls": []
+    }
+  ],
   "Roles": [
     {
       "Name": "Admin",
-      "Permissions": [
-        {
-          "Name": "FullAccess",
-          "DisabledControls": [],
-          "HiddenControls": []
-        }
+      "PermissionNames": [
+        "FullAccess"
       ]
     },
     {
       "Name": "Operator",
-      "Permissions": [
-        {
-          "Name": "BasicAccess",
-          "DisabledControls": [
-            "btnDelete",
-            "btnAdvanced"
-          ],
-          "HiddenControls": []
-        }
+      "PermissionNames": [
+        "BasicAccess"
       ]
     },
     {
       "Name": "ReadOnly",
-      "Permissions": [
-        {
-          "Name": "ReadOnlyAccess",
-          "DisabledControls": [
-            "btnSave",
-            "btnDelete",
-            "btnExport",
-            "btnAddDynamic"
-          ],
-          "HiddenControls": [
-            "gbAdminPanel"
-          ]
-        }
+      "PermissionNames": [
+        "ReadOnlyAccess"
+      ]
+    },
+    {
+      "Name": "lixin",
+      "PermissionNames": [
+        "123"
       ]
     }
   ]

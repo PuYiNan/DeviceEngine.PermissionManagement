@@ -9,11 +9,13 @@ namespace DeviceEngine.PermissionManagement.Tests
     public class PermissionManagerTests
     {
         private string _testConfigPath;
+        private PermissionManager _permissionManager;
 
         [TestInitialize]
         public void TestInitialize()
         {
             _testConfigPath = Path.GetTempFileName() + ".json";
+            _permissionManager = new PermissionManager();
             CreateTestConfig();
         }
 
@@ -32,46 +34,43 @@ namespace DeviceEngine.PermissionManagement.Tests
             {
                 ScanMode = ScanMode.Hybrid,
                 CurrentRole = "Operator",
+                Permissions =
+                {
+                    new Permission
+                    {
+                        Name = "FullAccess",
+                        DisabledControls = { },
+                        HiddenControls = { }
+                    },
+                    new Permission
+                    {
+                        Name = "BasicAccess",
+                        DisabledControls = { "btnDelete" },
+                        HiddenControls = { }
+                    },
+                    new Permission
+                    {
+                        Name = "ReadOnlyAccess",
+                        DisabledControls = { "btnSave", "btnDelete" },
+                        HiddenControls = { "pnlAdmin" }
+                    }
+                },
                 Roles =
                 {
                     new Role
                     {
                         Name = "Admin",
-                        Permissions =
-                        {
-                            new Permission
-                            {
-                                Name = "FullAccess",
-                                DisabledControls = { },
-                                HiddenControls = { }
-                            }
-                        }
+                        PermissionNames = { "FullAccess" }
                     },
                     new Role
                     {
                         Name = "Operator",
-                        Permissions =
-                        {
-                            new Permission
-                            {
-                                Name = "BasicAccess",
-                                DisabledControls = { "btnDelete" },
-                                HiddenControls = { }
-                            }
-                        }
+                        PermissionNames = { "BasicAccess" }
                     },
                     new Role
                     {
                         Name = "ReadOnly",
-                        Permissions =
-                        {
-                            new Permission
-                            {
-                                Name = "ReadOnlyAccess",
-                                DisabledControls = { "btnSave", "btnDelete" },
-                                HiddenControls = { "pnlAdmin" }
-                            }
-                        }
+                        PermissionNames = { "ReadOnlyAccess" }
                     }
                 }
             };
@@ -83,73 +82,73 @@ namespace DeviceEngine.PermissionManagement.Tests
         [TestMethod]
         public void LoadConfiguration_ValidFile_LoadsSuccessfully()
         {
-            PermissionManager.Instance.LoadConfiguration(_testConfigPath);
-            
-            Assert.IsNotNull(PermissionManager.Instance.GetCurrentRole());
-            Assert.AreEqual("Operator", PermissionManager.Instance.GetCurrentRole().Name);
+            _permissionManager.Initialize(_testConfigPath);
+
+            Assert.IsNotNull(_permissionManager.GetCurrentRole());
+            Assert.AreEqual("Operator", _permissionManager.GetCurrentRole().Name);
         }
 
         [TestMethod]
         public void SetCurrentRole_ValidRole_ChangesRole()
         {
-            PermissionManager.Instance.LoadConfiguration(_testConfigPath);
-            PermissionManager.Instance.SetCurrentRole("Admin");
-            
-            Assert.AreEqual("Admin", PermissionManager.Instance.GetCurrentRole().Name);
+            _permissionManager.Initialize(_testConfigPath);
+            _permissionManager.SetCurrentRole("Admin");
+
+            Assert.AreEqual("Admin", _permissionManager.GetCurrentRole().Name);
         }
 
         [TestMethod]
         public void CheckControlEnabled_ControlInDisabledList_ReturnsFalse()
         {
-            PermissionManager.Instance.LoadConfiguration(_testConfigPath);
-            PermissionManager.Instance.SetCurrentRole("Operator");
-            
-            bool result = PermissionManager.Instance.CheckControlEnabled("btnDelete");
-            
+            _permissionManager.Initialize(_testConfigPath);
+            _permissionManager.SetCurrentRole("Operator");
+
+            bool result = _permissionManager.CheckControlEnabled("btnDelete");
+
             Assert.IsFalse(result);
         }
 
         [TestMethod]
         public void CheckControlEnabled_ControlNotInDisabledList_ReturnsTrue()
         {
-            PermissionManager.Instance.LoadConfiguration(_testConfigPath);
-            PermissionManager.Instance.SetCurrentRole("Operator");
-            
-            bool result = PermissionManager.Instance.CheckControlEnabled("btnSave");
-            
+            _permissionManager.Initialize(_testConfigPath);
+            _permissionManager.SetCurrentRole("Operator");
+
+            bool result = _permissionManager.CheckControlEnabled("btnSave");
+
             Assert.IsTrue(result);
         }
 
         [TestMethod]
         public void CheckControlVisible_ControlInHiddenList_ReturnsFalse()
         {
-            PermissionManager.Instance.LoadConfiguration(_testConfigPath);
-            PermissionManager.Instance.SetCurrentRole("ReadOnly");
-            
-            bool result = PermissionManager.Instance.CheckControlVisible("pnlAdmin");
-            
+            _permissionManager.Initialize(_testConfigPath);
+            _permissionManager.SetCurrentRole("ReadOnly");
+
+            bool result = _permissionManager.CheckControlVisible("pnlAdmin");
+
             Assert.IsFalse(result);
         }
 
         [TestMethod]
         public void CheckControlVisible_ControlNotInHiddenList_ReturnsTrue()
         {
-            PermissionManager.Instance.LoadConfiguration(_testConfigPath);
-            PermissionManager.Instance.SetCurrentRole("ReadOnly");
-            
-            bool result = PermissionManager.Instance.CheckControlVisible("btnSave");
-            
+            _permissionManager.Initialize(_testConfigPath);
+            _permissionManager.SetCurrentRole("ReadOnly");
+
+            bool result = _permissionManager.CheckControlVisible("btnSave");
+
             Assert.IsTrue(result);
         }
 
         [TestMethod]
         public void CheckControlEnabled_AdminRole_AllControlsEnabled()
         {
-            PermissionManager.Instance.LoadConfiguration(_testConfigPath);
-            PermissionManager.Instance.SetCurrentRole("Admin");
-            
-            bool result = PermissionManager.Instance.CheckControlEnabled("btnDelete");
-            
+            _permissionManager.Initialize(_testConfigPath);
+            _permissionManager.SetCurrentRole("Admin");
+
+            bool result = _permissionManager.CheckControlEnabled("btnDelete");
+
             Assert.IsTrue(result);
         }
 
@@ -159,24 +158,25 @@ namespace DeviceEngine.PermissionManagement.Tests
             var config = new PermissionConfig
             {
                 CurrentRole = "TestRole",
+                Permissions =
+                {
+                    new Permission
+                    {
+                        Name = "Perm1",
+                        DisabledControls = { "btnA", "btnB" }
+                    },
+                    new Permission
+                    {
+                        Name = "Perm2",
+                        DisabledControls = { "btnB", "btnC" }
+                    }
+                },
                 Roles =
                 {
                     new Role
                     {
                         Name = "TestRole",
-                        Permissions =
-                        {
-                            new Permission
-                            {
-                                Name = "Perm1",
-                                DisabledControls = { "btnA", "btnB" }
-                            },
-                            new Permission
-                            {
-                                Name = "Perm2",
-                                DisabledControls = { "btnB", "btnC" }
-                            }
-                        }
+                        PermissionNames = { "Perm1", "Perm2" }
                     }
                 }
             };
@@ -184,11 +184,11 @@ namespace DeviceEngine.PermissionManagement.Tests
             string json = Newtonsoft.Json.JsonConvert.SerializeObject(config, Newtonsoft.Json.Formatting.Indented);
             File.WriteAllText(_testConfigPath, json);
 
-            PermissionManager.Instance.LoadConfiguration(_testConfigPath);
+            _permissionManager.Initialize(_testConfigPath);
 
-            Assert.IsFalse(PermissionManager.Instance.CheckControlEnabled("btnA"));
-            Assert.IsFalse(PermissionManager.Instance.CheckControlEnabled("btnB"));
-            Assert.IsFalse(PermissionManager.Instance.CheckControlEnabled("btnC"));
+            Assert.IsFalse(_permissionManager.CheckControlEnabled("btnA"));
+            Assert.IsFalse(_permissionManager.CheckControlEnabled("btnB"));
+            Assert.IsFalse(_permissionManager.CheckControlEnabled("btnC"));
         }
     }
 }

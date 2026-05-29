@@ -11,63 +11,57 @@ namespace DeviceEngine.PermissionManagement.Managers
 {
     public class PermissionManager : IPermissionManager
     {
-        private static PermissionManager _instance;
         private PermissionConfig _config;
         private string _configFilePath;
         private HashSet<string> _scannedPaths = new HashSet<string>();
         private Dictionary<string, WeakReference<FrameworkElement>> _controlCache = new Dictionary<string, WeakReference<FrameworkElement>>();
         private DispatcherTimer _scanDebounceTimer;
         private FileSystemWatcher _fileWatcher;
-        
-        public static PermissionManager Instance => _instance ?? (_instance = new PermissionManager());
-        
+
         public ScanMode ScanMode { get; set; } = ScanMode.Hybrid;
-        
+
         public bool EnableHotReload { get; set; } = true;
-        
+
         public event EventHandler RoleChanged;
-        
-        private PermissionManager()
+
+        public PermissionManager()
         {
         }
-        
-        public void LoadConfiguration(string filePath)
+
+        public void Initialize(string configFilePath)
         {
-            _configFilePath = filePath;
-            
-            if (File.Exists(filePath))
+            _configFilePath = configFilePath;
+
+            if (File.Exists(configFilePath))
             {
-                string json = File.ReadAllText(filePath);
+                string json = File.ReadAllText(configFilePath);
                 _config = JsonConvert.DeserializeObject<PermissionConfig>(json);
-                
+
                 if (_config.ScanMode != ScanMode.Explicit && _config.ScanMode != ScanMode.Auto)
                 {
                     _config.ScanMode = ScanMode.Hybrid;
                 }
-                
+
                 ScanMode = _config.ScanMode;
             }
             else
             {
                 _config = new PermissionConfig();
-                SaveConfiguration();
+                SaveConfig();
             }
-            
+
             if (EnableHotReload)
             {
                 SetupFileWatcher();
             }
         }
-        
-        public void ReloadConfiguration()
+
+        public PermissionConfig GetConfig()
         {
-            if (!string.IsNullOrEmpty(_configFilePath))
-            {
-                LoadConfiguration(_configFilePath);
-            }
+            return _config;
         }
-        
-        public void SaveConfiguration()
+
+        public void SaveConfig()
         {
             if (!string.IsNullOrEmpty(_configFilePath))
             {
@@ -75,29 +69,55 @@ namespace DeviceEngine.PermissionManagement.Managers
                 File.WriteAllText(_configFilePath, json);
             }
         }
-        
+
+        public void LoadConfiguration(string filePath)
+        {
+            Initialize(filePath);
+        }
+
+        public void ReloadConfiguration()
+        {
+            if (!string.IsNullOrEmpty(_configFilePath))
+            {
+                Initialize(_configFilePath);
+            }
+        }
+
+        public void SaveConfiguration()
+        {
+            SaveConfig();
+        }
+
         public void SetCurrentRole(string roleName)
         {
             _config.CurrentRole = roleName;
-            SaveConfiguration();
+            SaveConfig();
             RaiseRoleChanged();
             ApplyPermissionsToAllRegisteredControls();
         }
-        
+
         public Role GetCurrentRole()
         {
             return _config?.Roles.FirstOrDefault(r => r.Name == _config.CurrentRole);
         }
-        
+
         public bool CheckControlEnabled(string controlPath)
         {
             if (_config == null) return true;
-            
+
             var role = GetCurrentRole();
             if (role == null) return true;
-            
-            var allDisabled = role.Permissions.SelectMany(p => p.DisabledControls).ToList();
-            
+
+            var allDisabled = new List<string>();
+            foreach (var permName in role.PermissionNames)
+            {
+                var perm = _config.Permissions.FirstOrDefault(p => p.Name == permName);
+                if (perm != null)
+                {
+                    allDisabled.AddRange(perm.DisabledControls);
+                }
+            }
+
             string currentPath = controlPath;
             while (!string.IsNullOrEmpty(currentPath))
             {
@@ -107,19 +127,27 @@ namespace DeviceEngine.PermissionManagement.Managers
                 }
                 currentPath = GetParentPath(currentPath);
             }
-            
+
             return true;
         }
-        
+
         public bool CheckControlVisible(string controlPath)
         {
             if (_config == null) return true;
-            
+
             var role = GetCurrentRole();
             if (role == null) return true;
-            
-            var allHidden = role.Permissions.SelectMany(p => p.HiddenControls).ToList();
-            
+
+            var allHidden = new List<string>();
+            foreach (var permName in role.PermissionNames)
+            {
+                var perm = _config.Permissions.FirstOrDefault(p => p.Name == permName);
+                if (perm != null)
+                {
+                    allHidden.AddRange(perm.HiddenControls);
+                }
+            }
+
             string currentPath = controlPath;
             while (!string.IsNullOrEmpty(currentPath))
             {
@@ -129,10 +157,10 @@ namespace DeviceEngine.PermissionManagement.Managers
                 }
                 currentPath = GetParentPath(currentPath);
             }
-            
+
             return true;
         }
-        
+
         public void ApplyPermissions(DependencyObject rootElement)
         {
             TraverseVisualTree(rootElement, element =>
@@ -144,15 +172,15 @@ namespace DeviceEngine.PermissionManagement.Managers
                 }
             });
         }
-        
+
         public void ScanControls(DependencyObject root)
         {
             var newPaths = new HashSet<string>();
             CollectControlPaths(root, "", newPaths);
-            
+
             var addedPaths = newPaths.Except(_scannedPaths);
             var removedPaths = _scannedPaths.Except(newPaths);
-            
+
             foreach (var path in addedPaths)
             {
                 FrameworkElement control = FindControlByPath(root, path);
@@ -162,27 +190,27 @@ namespace DeviceEngine.PermissionManagement.Managers
                     ApplyControlPermission(control, path);
                 }
             }
-            
+
             foreach (var path in removedPaths)
             {
                 UnregisterControl(path);
             }
-            
+
             _scannedPaths = newPaths;
         }
-        
+
         public void RequestScan()
         {
             if (_scanDebounceTimer != null)
             {
                 _scanDebounceTimer.Stop();
             }
-            
+
             _scanDebounceTimer = new DispatcherTimer
             {
                 Interval = TimeSpan.FromMilliseconds(500)
             };
-            
+
             _scanDebounceTimer.Tick += (s, e) =>
             {
                 _scanDebounceTimer.Stop();
@@ -194,10 +222,10 @@ namespace DeviceEngine.PermissionManagement.Managers
                     }
                 }
             };
-            
+
             _scanDebounceTimer.Start();
         }
-        
+
         public void RegisterControl(string tag, FrameworkElement control)
         {
             if (_controlCache.ContainsKey(tag))
@@ -206,12 +234,12 @@ namespace DeviceEngine.PermissionManagement.Managers
             }
             _controlCache[tag] = new WeakReference<FrameworkElement>(control);
         }
-        
+
         public void UnregisterControl(string tag)
         {
             _controlCache.Remove(tag);
         }
-        
+
         public void ApplyControlPermission(FrameworkElement control, string tag)
         {
             if (!control.IsLoaded)
@@ -225,20 +253,20 @@ namespace DeviceEngine.PermissionManagement.Managers
                 control.Loaded += loadedHandler;
                 return;
             }
-            
+
             ApplyControlPermissionInternal(control, tag);
         }
-        
+
         private void ApplyControlPermissionInternal(FrameworkElement control, string tag)
         {
             control.IsEnabled = CheckControlEnabled(tag);
             control.Visibility = CheckControlVisible(tag) ? Visibility.Visible : Visibility.Collapsed;
         }
-        
+
         private void ApplyPermissionsToAllRegisteredControls()
         {
             var toRemove = new List<string>();
-            
+
             foreach (var kvp in _controlCache)
             {
                 if (kvp.Value.TryGetTarget(out FrameworkElement control))
@@ -250,23 +278,23 @@ namespace DeviceEngine.PermissionManagement.Managers
                     toRemove.Add(kvp.Key);
                 }
             }
-            
+
             foreach (var key in toRemove)
             {
                 _controlCache.Remove(key);
             }
         }
-        
+
         private void CollectControlPaths(DependencyObject parent, string parentPath, HashSet<string> paths)
         {
             for (int i = 0; i < System.Windows.Media.VisualTreeHelper.GetChildrenCount(parent); i++)
             {
                 var child = System.Windows.Media.VisualTreeHelper.GetChild(parent, i);
-                
+
                 if (child is FrameworkElement fe)
                 {
                     string tag = GetControlTag(fe);
-                    
+
                     if (!string.IsNullOrEmpty(tag))
                     {
                         string path = string.IsNullOrEmpty(parentPath) ? tag : $"{parentPath}.{tag}";
@@ -284,37 +312,37 @@ namespace DeviceEngine.PermissionManagement.Managers
                 }
             }
         }
-        
+
         private string GetControlTag(FrameworkElement element)
         {
             switch (ScanMode)
             {
                 case ScanMode.Explicit:
                     return Behaviors.PermissionBehavior.GetPermissionTag(element);
-                
+
                 case ScanMode.Auto:
                     return !string.IsNullOrEmpty(element.Name) ? element.Name : null;
-                
+
                 case ScanMode.Hybrid:
                 default:
                     string tag = Behaviors.PermissionBehavior.GetPermissionTag(element);
                     return !string.IsNullOrEmpty(tag) ? tag : (string.IsNullOrEmpty(element.Name) ? null : element.Name);
             }
         }
-        
+
         private FrameworkElement FindControlByPath(DependencyObject root, string path)
         {
             var parts = path.Split('.');
             DependencyObject current = root;
-            
+
             foreach (string part in parts)
             {
                 bool found = false;
-                
+
                 for (int i = 0; i < System.Windows.Media.VisualTreeHelper.GetChildrenCount(current); i++)
                 {
                     var child = System.Windows.Media.VisualTreeHelper.GetChild(current, i);
-                    
+
                     if (child is FrameworkElement fe)
                     {
                         string tag = GetControlTag(fe);
@@ -326,22 +354,22 @@ namespace DeviceEngine.PermissionManagement.Managers
                         }
                     }
                 }
-                
+
                 if (!found)
                 {
                     return null;
                 }
             }
-            
+
             return current as FrameworkElement;
         }
-        
+
         private string GetParentPath(string path)
         {
             int lastDotIndex = path.LastIndexOf('.');
             return lastDotIndex > 0 ? path.Substring(0, lastDotIndex) : null;
         }
-        
+
         private void TraverseVisualTree(DependencyObject parent, Action<FrameworkElement> action)
         {
             for (int i = 0; i < System.Windows.Media.VisualTreeHelper.GetChildrenCount(parent); i++)
@@ -354,29 +382,29 @@ namespace DeviceEngine.PermissionManagement.Managers
                 TraverseVisualTree(child, action);
             }
         }
-        
+
         private void SetupFileWatcher()
         {
             if (_fileWatcher != null)
             {
                 _fileWatcher.Dispose();
             }
-            
+
             _fileWatcher = new FileSystemWatcher
             {
                 Path = Path.GetDirectoryName(_configFilePath),
                 Filter = Path.GetFileName(_configFilePath),
                 NotifyFilter = NotifyFilters.LastWrite
             };
-            
+
             _fileWatcher.Changed += delegate (object s, FileSystemEventArgs e)
             {
-                Application.Current.Dispatcher.BeginInvoke(new System.Action(ReloadConfiguration));
+                Application.Current.Dispatcher.BeginInvoke(new Action(ReloadConfiguration));
             };
-            
+
             _fileWatcher.EnableRaisingEvents = true;
         }
-        
+
         private void RaiseRoleChanged()
         {
             RoleChanged?.Invoke(this, EventArgs.Empty);

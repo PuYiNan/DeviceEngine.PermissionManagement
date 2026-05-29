@@ -30,5 +30,13 @@ namespace DeviceEngine.PermissionManagement.Managers
         void RegisterControl(string tag, FrameworkElement control);
         
         void UnregisterControl(string tag);
+
+        void ApplyControlPermission(FrameworkElement control, string tag);
+
+        void Initialize(string configFilePath);
+
+        PermissionConfig GetConfig();
+
+        void SaveConfig();
     }
 }

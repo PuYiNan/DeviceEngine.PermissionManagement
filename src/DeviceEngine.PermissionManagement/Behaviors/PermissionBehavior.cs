@@ -64,8 +64,9 @@ namespace DeviceEngine.PermissionManagement.Behaviors
                 {
                     Application.Current.Dispatcher.BeginInvoke(new System.Action(() =>
                     {
-                        PermissionManager.Instance.RegisterControl(tag, element);
-                        PermissionManager.Instance.ApplyControlPermission(element, tag);
+                        var pm = ServiceLocator.Current.GetService(typeof(Managers.IPermissionManager)) as Managers.IPermissionManager;
+                        pm?.RegisterControl(tag, element);
+                        pm?.ApplyControlPermission(element, tag);
                     }));
                 }
             }

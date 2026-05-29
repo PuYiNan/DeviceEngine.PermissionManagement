@@ -1,8 +1,7 @@
 using DeviceEngine.PermissionManagement.Models;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Linq;
 using System.ComponentModel;
+using System.Linq;
 
 namespace DeviceEngine.PermissionManagement.Editors
 {
@@ -11,6 +10,7 @@ namespace DeviceEngine.PermissionManagement.Editors
         private Role _selectedRole;
 
         public ObservableCollection<Role> Roles { get; set; } = new ObservableCollection<Role>();
+        public ObservableCollection<PermissionBindingItem> PermissionBindingItems { get; set; } = new ObservableCollection<PermissionBindingItem>();
 
         public Role SelectedRole
         {
@@ -26,34 +26,62 @@ namespace DeviceEngine.PermissionManagement.Editors
         public event PropertyChangedEventHandler PropertyChanged;
         public event System.EventHandler<Role> RoleSelected;
 
-        public void LoadRoles(List<Role> roles)
+        public void LoadRoles(PermissionConfig config)
         {
             Roles.Clear();
-            foreach (var role in roles)
+            if (config?.Roles != null)
             {
-                Roles.Add(role);
+                foreach (var role in config.Roles)
+                {
+                    Roles.Add(role);
+                }
             }
         }
 
-        public void AddRole(string name)
+        public void RefreshBindings(PermissionConfig config)
+        {
+            PermissionBindingItems.Clear();
+            if (_selectedRole == null || config?.Permissions == null) return;
+
+            foreach (var perm in config.Permissions)
+            {
+                bool isBound = _selectedRole.PermissionNames.Contains(perm.Name);
+                var item = new PermissionBindingItem(perm.Name, isBound, bound =>
+                {
+                    if (bound)
+                    {
+                        if (!_selectedRole.PermissionNames.Contains(perm.Name))
+                            _selectedRole.PermissionNames.Add(perm.Name);
+                    }
+                    else
+                    {
+                        _selectedRole.PermissionNames.Remove(perm.Name);
+                    }
+                });
+                PermissionBindingItems.Add(item);
+            }
+        }
+
+        public void AddRole(PermissionConfig config, string name)
         {
             if (!string.IsNullOrEmpty(name) && !Roles.Any(r => r.Name == name))
             {
                 var role = new Role { Name = name };
-                role.Permissions.Add(new Permission { Name = $"{name}Access" });
+                config.Roles.Add(role);
                 Roles.Add(role);
                 SelectedRole = role;
             }
         }
 
-        public void RemoveRole(Role role)
+        public void RemoveRole(PermissionConfig config, Role role)
         {
-            if (Roles.Count > 1)
+            if (config != null && role != null && Roles.Count > 1)
             {
+                config.Roles.Remove(role);
                 Roles.Remove(role);
                 if (SelectedRole == role)
                 {
-                    SelectedRole = Roles[0];
+                    SelectedRole = Roles.Count > 0 ? Roles[0] : null;
                 }
             }
         }

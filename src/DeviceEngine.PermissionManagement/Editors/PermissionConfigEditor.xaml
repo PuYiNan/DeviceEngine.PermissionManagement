@@ -1,7 +1,7 @@
 <Window x:Class="DeviceEngine.PermissionManagement.Editors.PermissionConfigEditor"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="权限配置编辑器" Height="600" Width="800"
+        Title="权限配置编辑器" Height="650" Width="900"
         WindowStartupLocation="CenterOwner">
     <Grid>
         <Grid.RowDefinitions>
@@ -10,6 +10,7 @@
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
+        <!-- Toolbar -->
         <ToolBar Grid.Row="0" Margin="2">
             <Button x:Name="btnSave" Content="保存" Click="btnSave_Click" Width="60" />
             <Button x:Name="btnImport" Content="导入" Click="btnImport_Click" Width="60" />
@@ -18,67 +19,143 @@
             <Button x:Name="btnRefreshControls" Content="刷新控件" Click="btnRefreshControls_Click" Width="80" />
         </ToolBar>
 
-        <Grid Grid.Row="1">
+        <!-- Main content: left panel + right panel -->
+        <Grid Grid.Row="1" Margin="2">
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="200" />
+                <ColumnDefinition Width="320" />
                 <ColumnDefinition Width="*" />
-                <ColumnDefinition Width="300" />
             </Grid.ColumnDefinitions>
 
-            <Border Grid.Column="0" BorderBrush="LightGray" BorderThickness="1" Margin="2">
-                <DockPanel>
-                    <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="2">
-                        <Button x:Name="btnAddRole" Content="+" Click="btnAddRole_Click" Width="24" />
-                        <Button x:Name="btnRemoveRole" Content="-" Click="btnRemoveRole_Click" Width="24" />
-                    </StackPanel>
-                    <ListBox x:Name="lstRoles" ItemsSource="{Binding RoleList.Roles}" 
-                             SelectedItem="{Binding RoleList.SelectedRole}"
-                             DisplayMemberPath="Name" Margin="2" />
-                </DockPanel>
+            <!-- LEFT PANEL -->
+            <Border Grid.Column="0" BorderBrush="LightGray" BorderThickness="1" Margin="0">
+                <Grid Margin="4">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+
+                    <!-- Row 0: Role + Permission headers with buttons -->
+                    <Grid Grid.Row="0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+
+                        <StackPanel Grid.Column="0" Orientation="Horizontal" Margin="0,0,2,0">
+                            <TextBlock Text="角色" FontWeight="Bold" VerticalAlignment="Center" />
+                            <Button x:Name="btnAddRole" Content="+" Click="btnAddRole_Click" Width="22" Height="22" Margin="2,0" />
+                            <Button x:Name="btnRemoveRole" Content="-" Click="btnRemoveRole_Click" Width="22" Height="22" />
+                        </StackPanel>
+
+                        <StackPanel Grid.Column="1" Orientation="Horizontal" Margin="2,0,0,0">
+                            <TextBlock Text="权限" FontWeight="Bold" VerticalAlignment="Center" />
+                            <Button x:Name="btnAddPermission" Content="+" Click="btnAddPermission_Click" Width="22" Height="22" Margin="2,0" />
+                            <Button x:Name="btnRemovePermission" Content="-" Click="btnRemovePermission_Click" Width="22" Height="22" />
+                        </StackPanel>
+                    </Grid>
+
+                    <!-- Row 1: Permission name input -->
+                    <Grid Grid.Row="1" Margin="0,2,0,4">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="1" Text="权限名称:" VerticalAlignment="Center" Margin="2,0,4,0" />
+                        <TextBox Grid.Column="1" x:Name="txtPermissionName" VerticalAlignment="Center" />
+                    </Grid>
+
+                    <!-- Row 2,3,4,5 combined: the two lists side by side and binding area -->
+                    <!-- Role list | Permission list (side by side) -->
+                    <Grid Grid.Row="2" Grid.RowSpan="2">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <ListBox Grid.Column="0" x:Name="lstRoles" ItemsSource="{Binding RoleList.Roles}"
+                                 SelectedItem="{Binding RoleList.SelectedRole}"
+                                 DisplayMemberPath="Name" Margin="0,0,2,0" />
+                        <ListBox Grid.Column="1" x:Name="lstPermissions" ItemsSource="{Binding PermissionEditor.Permissions}"
+                                 SelectedItem="{Binding PermissionEditor.SelectedPermission}"
+                                 DisplayMemberPath="Name" Margin="2,0,0,0" />
+                    </Grid>
+
+                    <!-- Selection info -->
+                    <TextBlock Grid.Row="4" Margin="0,4,0,2">
+                        <Run Text="角色: " />
+                        <Run Text="{Binding RoleList.SelectedRole.Name, FallbackValue=(未选择)}" FontWeight="Bold" />
+                        <Run Text="  权限: " />
+                        <Run Text="{Binding PermissionEditor.SelectedPermission.Name, FallbackValue=(未选择)}" FontWeight="Bold" />
+                    </TextBlock>
+
+                    <!-- Permission binding checkboxes -->
+                    <Border Grid.Row="5" BorderBrush="LightGray" BorderThickness="0,1,0,0" Margin="0,2,0,0">
+                        <DockPanel>
+                            <TextBlock DockPanel.Dock="Top" Text="权限绑定（勾选 = 角色拥有该权限）" FontWeight="Bold" Margin="0,2,0,2" />
+                            <ItemsControl ItemsSource="{Binding RoleList.PermissionBindingItems}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <CheckBox IsChecked="{Binding IsBound}" Content="{Binding PermissionName}" Margin="2,1" />
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </DockPanel>
+                    </Border>
+                </Grid>
             </Border>
 
-            <Border Grid.Column="1" BorderBrush="LightGray" BorderThickness="1" Margin="2">
-                <DockPanel>
-                    <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="2">
-                        <TextBlock Text="权限名称:" Margin="2" />
-                        <TextBox x:Name="txtPermissionName" Width="150" Margin="2" />
-                        <Button x:Name="btnAddPermission" Content="添加权限" Click="btnAddPermission_Click" Width="80" />
-                        <Button x:Name="btnRemovePermission" Content="删除权限" Click="btnRemovePermission_Click" Width="80" />
-                    </StackPanel>
-                    <TabControl x:Name="tabControl" Margin="2">
-                        <TabItem Header="禁用控件">
-                            <ListBox x:Name="lstDisabledControls" ItemsSource="{Binding SelectedDisabledControls}" />
-                        </TabItem>
-                        <TabItem Header="隐藏控件">
-                            <ListBox x:Name="lstHiddenControls" ItemsSource="{Binding SelectedHiddenControls}" />
-                        </TabItem>
-                    </TabControl>
-                </DockPanel>
-            </Border>
+            <!-- RIGHT PANEL -->
+            <Border Grid.Column="1" BorderBrush="LightGray" BorderThickness="1" Margin="2,0,0,0">
+                <Grid Margin="4">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
 
-            <Border Grid.Column="2" BorderBrush="LightGray" BorderThickness="1" Margin="2">
-                <DockPanel>
-                    <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="2">
-                        <TextBlock Text="可用控件" Margin="2" />
+                    <!-- Control tree -->
+                    <DockPanel Grid.Row="0">
+                        <TextBlock DockPanel.Dock="Top" Text="可用控件" FontWeight="Bold" Margin="0,0,0,4" />
+                        <TreeView x:Name="tvControls" ItemsSource="{Binding ControlTree.RootItems}">
+                            <TreeView.ItemTemplate>
+                                <HierarchicalDataTemplate ItemsSource="{Binding Children}">
+                                    <StackPanel Orientation="Horizontal">
+                                        <CheckBox IsChecked="{Binding IsChecked}" Margin="2" />
+                                        <TextBlock Text="{Binding Name}" />
+                                    </StackPanel>
+                                </HierarchicalDataTemplate>
+                            </TreeView.ItemTemplate>
+                        </TreeView>
+                    </DockPanel>
+
+                    <!-- Action buttons -->
+                    <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,4">
+                        <Button x:Name="btnAddSelectedToDisabled" Content="添加到选中权限的禁用列表" Click="btnAddSelectedToDisabled_Click" Width="180" Margin="0,0,4,0" />
+                        <Button x:Name="btnAddSelectedToHidden" Content="添加到选中权限的隐藏列表" Click="btnAddSelectedToHidden_Click" Width="180" />
                     </StackPanel>
-                    <TreeView x:Name="tvControls" ItemsSource="{Binding ControlTree.RootItems}">
-                        <TreeView.ItemTemplate>
-                            <HierarchicalDataTemplate ItemsSource="{Binding Children}">
-                                <StackPanel Orientation="Horizontal">
-                                    <CheckBox IsChecked="{Binding IsChecked}" Margin="2" />
-                                    <TextBlock Text="{Binding Name}" />
-                                </StackPanel>
-                            </HierarchicalDataTemplate>
-                        </TreeView.ItemTemplate>
-                    </TreeView>
-                    <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" Margin="2">
-                        <Button x:Name="btnAddSelectedToDisabled" Content="添加到禁用列表" Click="btnAddSelectedToDisabled_Click" Width="120" />
-                        <Button x:Name="btnAddSelectedToHidden" Content="添加到隐藏列表" Click="btnAddSelectedToHidden_Click" Width="120" />
-                    </StackPanel>
-                </DockPanel>
+
+                    <!-- Control lists for selected permission -->
+                    <DockPanel Grid.Row="2">
+                        <TextBlock DockPanel.Dock="Top" Text="选中权限的控件列表" FontWeight="Bold" Margin="0,4,0,2" />
+                        <TabControl x:Name="tabControl">
+                            <TabItem Header="禁用控件">
+                                <ListBox x:Name="lstDisabledControls"
+                                         ItemsSource="{Binding PermissionEditor.SelectedPermission.DisabledControls, FallbackValue={x:Null}}" />
+                            </TabItem>
+                            <TabItem Header="隐藏控件">
+                                <ListBox x:Name="lstHiddenControls"
+                                         ItemsSource="{Binding PermissionEditor.SelectedPermission.HiddenControls, FallbackValue={x:Null}}" />
+                            </TabItem>
+                        </TabControl>
+                    </DockPanel>
+                </Grid>
             </Border>
         </Grid>
 
+        <!-- Bottom buttons -->
         <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="5">
             <Button x:Name="btnOK" Content="确定" Click="btnOK_Click" Width="60" IsDefault="True" />
             <Button x:Name="btnCancel" Content="取消" Click="btnCancel_Click" Width="60" IsCancel="True" />
