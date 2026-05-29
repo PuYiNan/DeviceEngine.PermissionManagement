@@ -62,11 +62,11 @@ namespace DeviceEngine.PermissionManagement.Editors
             }
         }
 
-        public void AddRole(PermissionConfig config, string name)
+        public void AddRole(PermissionConfig config, string name, string description = "")
         {
             if (!string.IsNullOrEmpty(name) && !Roles.Any(r => r.Name == name))
             {
-                var role = new Role { Name = name };
+                var role = new Role { Name = name, Description = description ?? "" };
                 config.Roles.Add(role);
                 Roles.Add(role);
                 SelectedRole = role;

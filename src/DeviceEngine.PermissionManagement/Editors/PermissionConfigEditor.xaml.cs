@@ -93,10 +93,11 @@ namespace DeviceEngine.PermissionManagement.Editors
             var config = _permissionManager?.GetConfig();
             if (config == null) return;
 
-            var input = new InputDialog("添加角色", "请输入角色名称:");
-            if (input.ShowDialog() == true)
+            var dialog = new NameDescriptionDialog("添加角色", "角色名称:", "角色描述:");
+            dialog.Owner = this;
+            if (dialog.ShowDialog() == true)
             {
-                RoleList.AddRole(config, input.InputText);
+                RoleList.AddRole(config, dialog.InputName, dialog.InputDescription);
                 RoleList.RefreshBindings(config);
             }
         }
@@ -117,10 +118,13 @@ namespace DeviceEngine.PermissionManagement.Editors
         private void btnAddPermission_Click(object sender, RoutedEventArgs e)
         {
             var config = _permissionManager?.GetConfig();
-            if (config != null)
+            if (config == null) return;
+
+            var dialog = new NameDescriptionDialog("添加权限", "权限名称:", "权限描述:");
+            dialog.Owner = this;
+            if (dialog.ShowDialog() == true)
             {
-                PermissionEditor.AddPermission(config, txtPermissionName.Text);
-                txtPermissionName.Clear();
+                PermissionEditor.AddPermission(config, dialog.InputName, dialog.InputDescription);
                 RoleList.RefreshBindings(config);
             }
         }
@@ -254,45 +258,6 @@ namespace DeviceEngine.PermissionManagement.Editors
         protected void OnPropertyChanged(string propertyName)
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
-        }
-    }
-
-    public class InputDialog : Window
-    {
-        public string InputText { get; set; }
-
-        public InputDialog(string title, string prompt)
-        {
-            Title = title;
-            Width = 300;
-            Height = 150;
-            WindowStartupLocation = WindowStartupLocation.CenterOwner;
-
-            var grid = new Grid();
-            grid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
-            grid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
-            grid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
-
-            var label = new System.Windows.Controls.Label { Content = prompt, Margin = new Thickness(5) };
-            Grid.SetRow(label, 0);
-
-            var textBox = new System.Windows.Controls.TextBox { Margin = new Thickness(5) };
-            textBox.SetBinding(System.Windows.Controls.TextBox.TextProperty, new System.Windows.Data.Binding("InputText") { Mode = System.Windows.Data.BindingMode.TwoWay, Source = this });
-            Grid.SetRow(textBox, 1);
-
-            var buttonPanel = new System.Windows.Controls.StackPanel { Orientation = System.Windows.Controls.Orientation.Horizontal, HorizontalAlignment = System.Windows.HorizontalAlignment.Right, Margin = new Thickness(5) };
-            var okBtn = new System.Windows.Controls.Button { Content = "确定", Width = 60, Margin = new Thickness(2) };
-            okBtn.Click += (s, ev) => { DialogResult = true; Close(); };
-            var cancelBtn = new System.Windows.Controls.Button { Content = "取消", Width = 60, Margin = new Thickness(2) };
-            cancelBtn.Click += (s, ev) => { DialogResult = false; Close(); };
-            buttonPanel.Children.Add(okBtn);
-            buttonPanel.Children.Add(cancelBtn);
-            Grid.SetRow(buttonPanel, 2);
-
-            grid.Children.Add(label);
-            grid.Children.Add(textBox);
-            grid.Children.Add(buttonPanel);
-            Content = grid;
         }
     }
 }

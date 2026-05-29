@@ -42,11 +42,11 @@ namespace DeviceEngine.PermissionManagement.Editors
             }
         }
 
-        public void AddPermission(PermissionConfig config, string name)
+        public void AddPermission(PermissionConfig config, string name, string description = "")
         {
             if (config != null && !string.IsNullOrEmpty(name) && !config.Permissions.Any(p => p.Name == name))
             {
-                var permission = new Permission { Name = name };
+                var permission = new Permission { Name = name, Description = description ?? "" };
                 config.Permissions.Add(permission);
                 Permissions.Add(permission);
                 SelectedPermission = permission;

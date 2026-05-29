@@ -4,11 +4,13 @@
   "Permissions": [
     {
       "Name": "FullAccess",
+      "Description": "完全访问权限，不受任何限制",
       "DisabledControls": [],
       "HiddenControls": []
     },
     {
       "Name": "BasicAccess",
+      "Description": "基本操作权限，禁止删除和高级设置",
       "DisabledControls": [
         "btnDelete",
         "btnAdvanced"
@@ -17,6 +19,7 @@
     },
     {
       "Name": "ReadOnlyAccess",
+      "Description": "只读权限，仅允许查看，禁止所有修改操作",
       "DisabledControls": [
         "btnSave",
         "btnDelete",
@@ -29,6 +32,7 @@
     },
     {
       "Name": "123",
+      "Description": "",
       "DisabledControls": [
         "cmbRole",
         "cmbRole.templateRoot",
@@ -82,24 +86,28 @@
   "Roles": [
     {
       "Name": "Admin",
+      "Description": "系统管理员，拥有全部操作权限",
       "PermissionNames": [
         "FullAccess"
       ]
     },
     {
       "Name": "Operator",
+      "Description": "操作员，拥有基本操作权限",
       "PermissionNames": [
         "BasicAccess"
       ]
     },
     {
       "Name": "ReadOnly",
+      "Description": "只读用户，仅可查看不可修改",
       "PermissionNames": [
         "ReadOnlyAccess"
       ]
     },
     {
       "Name": "lixin",
+      "Description": "",
       "PermissionNames": [
         "123"
       ]
