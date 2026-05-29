@@ -42,6 +42,11 @@ namespace DeviceEngine.PermissionManagement.Managers
                     _config.ScanMode = ScanMode.Hybrid;
                 }
 
+                if (_config.IgnoredControls == null)
+                {
+                    _config.IgnoredControls = new PermissionConfig().IgnoredControls;
+                }
+
                 ScanMode = _config.ScanMode;
             }
             else
@@ -315,19 +320,29 @@ namespace DeviceEngine.PermissionManagement.Managers
 
         private string GetControlTag(FrameworkElement element)
         {
+            string tag = null;
             switch (ScanMode)
             {
                 case ScanMode.Explicit:
-                    return Behaviors.PermissionBehavior.GetPermissionTag(element);
+                    tag = Behaviors.PermissionBehavior.GetPermissionTag(element);
+                    break;
 
                 case ScanMode.Auto:
-                    return !string.IsNullOrEmpty(element.Name) ? element.Name : null;
+                    tag = !string.IsNullOrEmpty(element.Name) ? element.Name : null;
+                    break;
 
                 case ScanMode.Hybrid:
                 default:
-                    string tag = Behaviors.PermissionBehavior.GetPermissionTag(element);
-                    return !string.IsNullOrEmpty(tag) ? tag : (string.IsNullOrEmpty(element.Name) ? null : element.Name);
+                    tag = Behaviors.PermissionBehavior.GetPermissionTag(element);
+                    if (string.IsNullOrEmpty(tag))
+                        tag = string.IsNullOrEmpty(element.Name) ? null : element.Name;
+                    break;
             }
+
+            if (tag != null && _config?.IgnoredControls != null && _config.IgnoredControls.Contains(tag))
+                return null;
+
+            return tag;
         }
 
         private FrameworkElement FindControlByPath(DependencyObject root, string path)

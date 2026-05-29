@@ -3,7 +3,29 @@
     "allow": [
       "mcp__codegraph__codegraph_files",
       "Bash(git checkout *)",
-      "Bash(git add *)"
+      "Bash(git add *)",
+      "Bash(git commit *)",
+      "Bash(git push *)",
+      "Bash(xxd -l 16 \"D:/LXCODE/DeviceEngine/DeviceEngine.PermissionManagement/src/DeviceEngine.PermissionManagement/DeviceEngine.PermissionManagement.csproj\")",
+      "Bash(ls \"C:\\\\Users\\\\Administrator\\\\.claude\\\\skills\\\\write-a-skill\" 2>/dev/null || echo \"directory exists check\")",
+      "Read(//c/Users/Administrator/.agents/skills/write-a-skill/**)",
+      "Bash(ls \"C:\\\\Users\\\\Administrator\\\\.claude\\\\skills\\\\\" 2>/dev/null || echo \"no skills dir\")",
+      "Read(//c/Users/Administrator/.claude/skills\" 2>/dev/**)",
+      "Read(//c/Users/Administrator/.claude/skills/**)",
+      "Read(//c/Users/Administrator/.claude/**)",
+      "Bash(mkdir -p \"C:/Users/Administrator/.claude/skills/csharp-build\")",
+      "Edit(~/.claude/skills/csharp-build/**)",
+      "Bash(\"C:/Program Files/Microsoft Visual Studio/18/Enterprise/MSBuild/Current/Bin/MSBuild.exe\" \"d:/LXCODE/DeviceEngine/DeviceEngine.PermissionManagement/DeviceEngine.PermissionManagement.sln\" /p:Configuration=Debug /m)",
+      "Bash(MSYS_NO_PATHCONV=1 \"C:/Program Files/Microsoft Visual Studio/18/Enterprise/MSBuild/Current/Bin/MSBuild.exe\" \"d:/LXCODE/DeviceEngine/DeviceEngine.PermissionManagement/DeviceEngine.PermissionManagement.sln\" /p:Configuration=Debug /m)",
+      "Read(//c/Program Files/Microsoft Visual Studio/18/Enterprise/MSBuild/Current/Bin/**)",
+      "Read(//c/Program Files/Microsoft Visual Studio/18/Professional/MSBuild/Current/Bin/**)",
+      "Read(//c/Program Files/Microsoft Visual Studio/18/Community/MSBuild/Current/Bin/**)",
+      "Read(//c/Program Files/Microsoft Visual Studio/2022/Enterprise/MSBuild/Current/Bin/**)",
+      "Read(//c/Program Files/Microsoft Visual Studio/2022/Professional/MSBuild/Current/Bin/**)",
+      "Bash(MSYS_NO_PATHCONV=1 \"C:\\\\Program Files\\\\Microsoft Visual Studio\\\\18\\\\Enterprise\\\\MSBuild\\\\Current\\\\Bin\\\\MSBuild.exe\" \"d:\\\\LXCODE\\\\DeviceEngine\\\\DeviceEngine.PermissionManagement\\\\DeviceEngine.PermissionManagement.sln\" /p:Configuration=Debug /m)"
+    ],
+    "additionalDirectories": [
+      "C:\\Users\\Administrator\\.claude\\skills"
     ]
   }
 }

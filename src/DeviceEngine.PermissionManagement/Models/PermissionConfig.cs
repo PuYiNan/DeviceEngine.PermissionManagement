@@ -11,5 +11,12 @@ namespace DeviceEngine.PermissionManagement.Models
         public List<Permission> Permissions { get; set; } = new List<Permission>();
 
         public List<Role> Roles { get; set; } = new List<Role>();
+
+        public List<string> IgnoredControls { get; set; } = new List<string>
+        {
+            "border", "contentPresenter", "templateRoot",
+            "PART_Popup", "PART_EditableTextBox", "splitBorder", "Arrow",
+            "toggleButton", "Header", "ScrollViewer", "ScrollContentPresenter"
+        };
     }
 }

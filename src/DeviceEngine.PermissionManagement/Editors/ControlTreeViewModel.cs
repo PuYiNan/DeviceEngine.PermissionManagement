@@ -1,3 +1,4 @@
+using DeviceEngine.PermissionManagement.Models;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
@@ -92,6 +93,8 @@ namespace DeviceEngine.PermissionManagement.Editors
     public class ControlTreeViewModel
     {
         public List<ControlTreeItem> RootItems { get; set; } = new List<ControlTreeItem>();
+        public ScanMode ScanMode { get; set; } = ScanMode.Hybrid;
+        public List<string> IgnoredControls { get; set; }
 
         public void ScanControls(Window window)
         {
@@ -106,17 +109,43 @@ namespace DeviceEngine.PermissionManagement.Editors
             ScanVisualTree(window, rootItem);
         }
 
+        private string GetElementName(FrameworkElement fe)
+        {
+            string tag = null;
+            switch (ScanMode)
+            {
+                case ScanMode.Explicit:
+                    tag = Behaviors.PermissionBehavior.GetPermissionTag(fe);
+                    break;
+
+                case ScanMode.Auto:
+                    tag = !string.IsNullOrEmpty(fe.Name) ? fe.Name : null;
+                    break;
+
+                case ScanMode.Hybrid:
+                default:
+                    tag = Behaviors.PermissionBehavior.GetPermissionTag(fe);
+                    if (string.IsNullOrEmpty(tag))
+                        tag = string.IsNullOrEmpty(fe.Name) ? null : fe.Name;
+                    break;
+            }
+
+            if (tag != null && IgnoredControls != null && IgnoredControls.Contains(tag))
+                return null;
+
+            return tag;
+        }
+
         private void ScanVisualTree(DependencyObject parent, ControlTreeItem parentItem)
         {
             for (int i = 0; i < VisualTreeHelper.GetChildrenCount(parent); i++)
             {
                 var child = VisualTreeHelper.GetChild(parent, i);
-                
+
                 if (child is FrameworkElement fe)
                 {
-                    string tag = Behaviors.PermissionBehavior.GetPermissionTag(fe);
-                    string name = !string.IsNullOrEmpty(tag) ? tag : fe.Name;
-                    
+                    string name = GetElementName(fe);
+
                     if (!string.IsNullOrEmpty(name))
                     {
                         var item = new ControlTreeItem

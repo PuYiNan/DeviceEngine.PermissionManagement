@@ -16,7 +16,8 @@
             <Button x:Name="btnImport" Content="导入" Click="btnImport_Click" Width="60" />
             <Button x:Name="btnExport" Content="导出" Click="btnExport_Click" Width="60" />
             <Separator />
-            <Button x:Name="btnRefreshControls" Content="刷新控件" Click="btnRefreshControls_Click" Width="80" />
+            <Button x:Name="btnRefreshControls" Content="刷新控件" Click="btnRefreshControls_Click" Width="80" Margin="0,0,4,0" />
+            <Button x:Name="btnEditIgnored" Content="忽略列表" Click="btnEditIgnored_Click" Width="80" />
         </ToolBar>
 
         <!-- Main content: left panel + right panel -->
@@ -140,12 +141,40 @@
                         <TextBlock DockPanel.Dock="Top" Text="选中权限的控件列表" FontWeight="Bold" Margin="0,4,0,2" />
                         <TabControl x:Name="tabControl">
                             <TabItem Header="禁用控件">
-                                <ListBox x:Name="lstDisabledControls"
-                                         ItemsSource="{Binding PermissionEditor.SelectedPermission.DisabledControls, FallbackValue={x:Null}}" />
+                                <Grid>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="*" />
+                                    </Grid.RowDefinitions>
+                                    <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,2">
+                                        <Button x:Name="btnRemoveDisabled" Content="删除选中项"
+                                                Click="btnRemoveDisabled_Click" Height="24" Margin="0,0,4,0" />
+                                        <Button x:Name="btnClearDisabled" Content="清空全部"
+                                                Click="btnClearDisabled_Click" Height="24" />
+                                    </StackPanel>
+                                    <ListBox x:Name="lstDisabledControls" Grid.Row="1"
+                                             SelectionMode="Extended"
+                                             KeyDown="lstDisabledControls_KeyDown"
+                                             ItemsSource="{Binding PermissionEditor.SelectedPermission.DisabledControls, FallbackValue={x:Null}}" />
+                                </Grid>
                             </TabItem>
                             <TabItem Header="隐藏控件">
-                                <ListBox x:Name="lstHiddenControls"
-                                         ItemsSource="{Binding PermissionEditor.SelectedPermission.HiddenControls, FallbackValue={x:Null}}" />
+                                <Grid>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="*" />
+                                    </Grid.RowDefinitions>
+                                    <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,2">
+                                        <Button x:Name="btnRemoveHidden" Content="删除选中项"
+                                                Click="btnRemoveHidden_Click" Height="24" Margin="0,0,4,0" />
+                                        <Button x:Name="btnClearHidden" Content="清空全部"
+                                                Click="btnClearHidden_Click" Height="24" />
+                                    </StackPanel>
+                                    <ListBox x:Name="lstHiddenControls" Grid.Row="1"
+                                             SelectionMode="Extended"
+                                             KeyDown="lstHiddenControls_KeyDown"
+                                             ItemsSource="{Binding PermissionEditor.SelectedPermission.HiddenControls, FallbackValue={x:Null}}" />
+                                </Grid>
                             </TabItem>
                         </TabControl>
                     </DockPanel>

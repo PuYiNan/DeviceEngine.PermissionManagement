@@ -7,6 +7,7 @@ using System.IO;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
 
 namespace DeviceEngine.PermissionManagement.Editors
 {
@@ -48,10 +49,13 @@ namespace DeviceEngine.PermissionManagement.Editors
 
         private void RefreshControls()
         {
+            var config = _permissionManager?.GetConfig();
             foreach (var window in Application.Current.Windows)
             {
                 if (window is Window w && w != this)
                 {
+                    ControlTree.ScanMode = config?.ScanMode ?? ScanMode.Hybrid;
+                    ControlTree.IgnoredControls = config?.IgnoredControls;
                     ControlTree.ScanControls(w);
                     break;
                 }
@@ -237,6 +241,22 @@ namespace DeviceEngine.PermissionManagement.Editors
         private void btnRefreshControls_Click(object sender, RoutedEventArgs e)
         {
             RefreshControls();
+            RefreshControlSelection();
+        }
+
+        private void btnEditIgnored_Click(object sender, RoutedEventArgs e)
+        {
+            var config = _permissionManager?.GetConfig();
+            if (config == null) return;
+
+            var dialog = new IgnoredControlsDialog(config.IgnoredControls);
+            dialog.Owner = this;
+            if (dialog.ShowDialog() == true)
+            {
+                config.IgnoredControls = dialog.Result;
+                RefreshControls();
+                RefreshControlSelection();
+            }
         }
 
         private void btnOK_Click(object sender, RoutedEventArgs e)
@@ -251,6 +271,56 @@ namespace DeviceEngine.PermissionManagement.Editors
         {
             DialogResult = false;
             Close();
+        }
+
+        private void btnRemoveDisabled_Click(object sender, RoutedEventArgs e)
+        {
+            RemoveSelectedFromDisabledList();
+        }
+
+        private void btnClearDisabled_Click(object sender, RoutedEventArgs e)
+        {
+            if (PermissionEditor.SelectedPermission != null)
+                PermissionEditor.SelectedPermission.DisabledControls.Clear();
+        }
+
+        private void lstDisabledControls_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Key == Key.Delete)
+                RemoveSelectedFromDisabledList();
+        }
+
+        private void btnRemoveHidden_Click(object sender, RoutedEventArgs e)
+        {
+            RemoveSelectedFromHiddenList();
+        }
+
+        private void btnClearHidden_Click(object sender, RoutedEventArgs e)
+        {
+            if (PermissionEditor.SelectedPermission != null)
+                PermissionEditor.SelectedPermission.HiddenControls.Clear();
+        }
+
+        private void lstHiddenControls_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Key == Key.Delete)
+                RemoveSelectedFromHiddenList();
+        }
+
+        private void RemoveSelectedFromDisabledList()
+        {
+            if (PermissionEditor.SelectedPermission == null) return;
+            var selected = lstDisabledControls.SelectedItems.Cast<string>().ToList();
+            foreach (var path in selected)
+                PermissionEditor.RemoveDisabledControl(PermissionEditor.SelectedPermission, path);
+        }
+
+        private void RemoveSelectedFromHiddenList()
+        {
+            if (PermissionEditor.SelectedPermission == null) return;
+            var selected = lstHiddenControls.SelectedItems.Cast<string>().ToList();
+            foreach (var path in selected)
+                PermissionEditor.RemoveHiddenControl(PermissionEditor.SelectedPermission, path);
         }
 
         public event PropertyChangedEventHandler PropertyChanged;
